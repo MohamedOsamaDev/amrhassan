@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "daily_attendances",
+  "info": {
+    "singularName": "daily-attendance",
+    "pluralName": "daily-attendances",
+    "displayName": "daily_attendance",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "حضر",
+        "راحه",
+        "غياب",
+        "انقطاع",
+        "استبعاد",
+        "استقاله"
+      ]
+    },
+    "employee": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::employee.employee"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "kind": "collectionType",
+  "collectionName": "employees",
+  "info": {
+    "singularName": "employee",
+    "pluralName": "employees",
+    "displayName": "employee",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "id_national": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "status_work": {
+      "type": "enumeration",
+      "enum": [
+        "لم يتم التحديد بعد",
+        "يعمل",
+        "لا يعمل",
+        "انقطاع",
+        "اسبعاد ",
+        "استقاله",
+        "ضم ولم يحضر",
+        "حضر",
+        "حضر للسكن",
+        "حضر وغادر",
+        "تم التواصل وجاري الحضور",
+        "لم يتم الرد "
+      ],
+      "default": "لم يتم التحديد بعد",
+      "required": false
+    },
+    "shift": {
+      "type": "enumeration",
+      "enum": [
+        "صباحى",
+        "مسائى",
+        "ليلى"
+      ]
+    },
+    "job_postion": {
+      "type": "enumeration",
+      "enum": [
+        "مدير موقع",
+        "ناب مدير",
+        "مشرف",
+        "فرد امن",
+        "جرد",
+        "مراقب كاميرا",
+        "مدرب عناصر"
+      ]
+    },
+    "location": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::location.location"
+    }
+  }
+}
