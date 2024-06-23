@@ -43,12 +43,10 @@ const HomePage = () => {
   const handleChooseFile = () => {
     fileInputRef.current.click();
   };
-
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
   };
-
   const handlechangeTime = (name, value) => {
     setDate({ ...date, [name]: value });
   };
@@ -94,7 +92,6 @@ const HomePage = () => {
   if (!auth) {
     return <div></div>;
   }
-
   return (
     <Layout>
       <BaseHeaderLayout
