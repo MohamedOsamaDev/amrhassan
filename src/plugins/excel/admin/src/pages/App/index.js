@@ -47,17 +47,6 @@ const HomePage = () => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
   };
-  const handlechangeTime = (name, value) => {
-    setDate({ ...date, [name]: value });
-  };
-  const handleExport = async () => {
-    try {
-      const res = await post("/excel-sheet/export", date);
-      console.log("🚀 ~ handleExport ~ res:", res);
-    } catch (error) {
-      console.log("🚀 ~ handleExport ~ error:", error);
-    }
-  };
   const handleimport = async () => {
     try {
       // handle form data
@@ -83,6 +72,31 @@ const HomePage = () => {
       setTimeout(() => {
         setresponse(null);
       }, 3000);
+    }
+  };
+  const handlechangeTime = (name, value) => {
+    setDate({ ...date, [name]: value });
+  };
+
+  const handleExport = async () => {
+    try {
+      const { data } = await post("/excel-sheet/export", date, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `excel-${new Date()
+          .toLocaleString()
+          .replace(/[ *?:\\/\[\]]/g, "-")}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.log("🚀 ~ handleExport ~ error:", error);
     }
   };
 

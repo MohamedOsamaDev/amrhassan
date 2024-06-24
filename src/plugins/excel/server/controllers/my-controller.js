@@ -1,18 +1,44 @@
 // @ts-nocheck
 "use strict";
 
-const convrtCustomExcel = require("../utils/convrtCustomExcel");
-
-const { findEmployee } = require("../utils/findEmpolyees");
+const { findEmployee, findloctionsID } = require("../utils/handlefind");
 const handleDuplicateArrayOfObject = require("../utils/handleDuplicateArrayOfObject");
-module.exports = ({ strapi }) => ({
-  export(ctx) {
-    try {
-      console.log("🚀 ~ export ~ ctx:", ctx.request.body);
+const { convrtExcelToJson, createExcel } = require("../utils/ExcelHandler");
+const { parseISO, startOfDay, endOfDay } = require("date-fns");
 
-      return ctx.send({
-        message: "Hello",
+module.exports = ({ strapi }) => ({
+  export: async (ctx) => {
+    try {
+      const start = parseISO(ctx.request.body.from);
+      const end = parseISO(ctx.request.body.to);
+      const employees = await strapi.db
+        .query("api::employee.employee")
+        .findMany({
+          where: {
+            createdAt: {
+              $gte: startOfDay(start),
+              $lte: endOfDay(end),
+            },
+          },
+          populate: { location: true },
+        });
+      employees.forEach((val) => {
+        val.location = val.location?.name || "";
       });
+      console.log("🚀 ~ employees.forEach ~ employees:", employees)
+      let headers = [
+        { header: "id", key: "id", width: 10 },
+        { header: "الاسم", key: "name", width: 20 },
+        { header: "رقم قومى", key: "id_national", width: 20 },
+        { header: "حالة", key: "job_postion", width: 20 },
+        { header: "العنوان", key: "address", width: 20 },
+        { header: "موبايل", key: "phone", width: 20 },
+        { header: "موقع", key: "location", width: 20 },
+      ];
+      const fileBuffer = await createExcel(employees,headers)
+      ctx.set('Content-Disposition', 'attachment; filename="users.xlsx"');
+      ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      return ctx.send(fileBuffer);
     } catch (error) {
       return ctx.badRequest(error);
     }
@@ -20,6 +46,7 @@ module.exports = ({ strapi }) => ({
   import: async (ctx) => {
     let massage = "حدث خطا او الملف تالف";
     try {
+      // handle headers fro excel sheet
       let headers = {
         موقع: "location",
         حالة: "job_postion",
@@ -30,41 +57,57 @@ module.exports = ({ strapi }) => ({
         الاسم: "name",
         م: "_id",
       };
-      let { data, errors } = await convrtCustomExcel(
+      // handle data fro excel sheet
+      let { data, errors } = await convrtExcelToJson(
         ctx?.request?.files?.file?.path,
         headers
       );
+      // check is date is not empty
       if (data && !errors) {
+        // handel dublicate id_national
         let dataAfterhandleDuplicates = handleDuplicateArrayOfObject(
           data,
           "id_national"
-        );
-        // handle check if the id_national not already present in the database
+        )
         const employees = await findEmployee(
-          data?.map((val) => val?.id_national)
+          data?.map((val) => val?.id_national?.trim())
         );
-        const cleanData = [];
+        const newEmployees = [];
         dataAfterhandleDuplicates.forEach((value) => {
           if (
             !employees?.find(
-              (value2) => +value2?.id_national === +value?.id_national
+              (value2) =>
+                value2?.id_national.toString().trim() ===
+                value?.id_national.toString().trim()
             )
           ) {
-            cleanData.push(value);
+            newEmployees.push(value);
           }
         });
-
-        if (cleanData?.length > 0) {
-          let newEmployees = await strapi.db
-            .query("api::employee.employee")
-            .createMany({
-              data: cleanData,
-            });
+        if (!!newEmployees?.length) {
+          // handle find Loctions
+          let targetLoctions = [
+            ...new Set(newEmployees?.map((val) => val?.location?.trim())),
+          ].filter(Boolean);
+          let loactions = await findloctionsID(targetLoctions);
+          newEmployees.forEach((value) => {
+            value.location = loactions.find((val) => val?.name.trim() === value?.location?.trim())?.id || null;
+          });
+          // handle create new employees
+          newEmployees.map(async (val) => {
+            try {
+              return await strapi.db
+                .query("api::employee.employee")
+                .create({data:val});
+            } catch (error) {
+              console.log("🚀 ~ newEmployees.map ~ error:", error);
+            }
+          });
           return ctx.send({
             message: "success",
-            count: newEmployees?.count,
+            count: newEmployees?.count || 0,
             total: data?.length,
-          });
+          }); 
         }
         massage = "ليس هناك اي عامل جديد لي اضافته";
       }

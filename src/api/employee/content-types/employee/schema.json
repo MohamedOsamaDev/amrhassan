@@ -67,6 +67,15 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::location.location"
+    },
+    "location_slug": {
+      "type": "string"
+    },
+    "location_v": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::location.location",
+      "inversedBy": "employees"
     }
   }
 }
