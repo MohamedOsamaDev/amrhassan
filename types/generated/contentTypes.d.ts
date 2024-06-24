@@ -463,12 +463,6 @@ export interface ApiEmployeeEmployee extends Schema.CollectionType {
       'oneToOne',
       'api::location.location'
     >;
-    location_slug: Attribute.String;
-    location_v: Attribute.Relation<
-      'api::employee.employee',
-      'manyToOne',
-      'api::location.location'
-    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -500,11 +494,6 @@ export interface ApiLocationLocation extends Schema.CollectionType {
   attributes: {
     name: Attribute.String;
     address: Attribute.String;
-    employees: Attribute.Relation<
-      'api::location.location',
-      'oneToMany',
-      'api::employee.employee'
-    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
